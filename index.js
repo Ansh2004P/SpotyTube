@@ -1,58 +1,59 @@
 const reader = require("readline-sync")
-
+const dotenv = require("dotenv")
+dotenv.config()
 // Gets information from the user and stores it into a dictionary.
 
-function getInformationFromUser() {
-    let playListName = reader.question("Enter the name for the playlist")
-    let link = reader.question("Enter the link for the playlist")
+// function getInformationFromUser() {
+//     let playListName = reader.question("Enter the name for the playlist")
+//     let link = reader.question("Enter the link for the playlist")
 
-    console.log("Pleae enter your spotify credentials")
-    console.warn(
-        "This information is not stored anywhere and is only used to create the playlist"
-    )
+//     console.log("Pleae enter your spotify credentials")
+//     console.warn(
+//         "This information is not stored anywhere and is only used to create the playlist"
+//     )
 
-    // Spotify login and error checking
-    let spotifyEmail = reader.question("Enter your spotify email/Username")
-    let spotifyPassword = reader.question("Enter your spotify password", {
-        hideEchoBack: true,
-    })
-    let spotifyVerify
-    spotifyVerify = reader.question("Re-enter your spotify password", {
-        hideEchoBack: true,
-    })
+//     // Spotify login and error checking
+//     let spotifyEmail = reader.question("Enter your spotify email/Username")
+//     let spotifyPassword = reader.question("Enter your spotify password", {
+//         hideEchoBack: true,
+//     })
+//     let spotifyVerify
+//     spotifyVerify = reader.question("Re-enter your spotify password", {
+//         hideEchoBack: true,
+//     })
 
-    while (spotifyPassword != spotifyVerify) {
-        console.log("Passwords do not match, try re-entering your password")
-        spotifyPassword = reader.question("Enter your spotify password", {
-            hideEchoBack: true,
-        })
-        spotifyVerify = reader.question("Re-enter your spotify password", {
-            hideEchoBack: true,
-        })
-    }
+//     while (spotifyPassword != spotifyVerify) {
+//         console.log("Passwords do not match, try re-entering your password")
+//         spotifyPassword = reader.question("Enter your spotify password", {
+//             hideEchoBack: true,
+//         })
+//         spotifyVerify = reader.question("Re-enter your spotify password", {
+//             hideEchoBack: true,
+//         })
+//     }
 
-    let spotifyPasswordEncrypt = ""
-    for (let i = 0; i < spotifyPassword.length; i++) {
-        spotifyPasswordEncrypt += "*"
-    }
+//     let spotifyPasswordEncrypt = ""
+//     for (let i = 0; i < spotifyPassword.length; i++) {
+//         spotifyPasswordEncrypt += "*"
+//     }
 
-    console.log("Your information: \n")
-    console.log("[Playlist name]: " + playListName + "\n")
-    console.log("[Playlist link]: " + link + "\n")
-    console.log("[Spotify username/email]: " + spotifyEmail + "\n")
-    console.log("[Spotify password]: " + spotifyPasswordEncrypt + "\n")
+//     console.log("Your information: \n")
+//     console.log("[Playlist name]: " + playListName + "\n")
+//     console.log("[Playlist link]: " + link + "\n")
+//     console.log("[Spotify username/email]: " + spotifyEmail + "\n")
+//     console.log("[Spotify password]: " + spotifyPasswordEncrypt + "\n")
 
-    if (reader.keyInYN("Please confirm your credentials: \n") == false) {
-        exit()
-    }
+//     if (reader.keyInYN("Please confirm your credentials: \n") == false) {
+//         exit()
+//     }
 
-    return {
-        name: playListName,
-        link: link,
-        email: spotifyEmail,
-        password: spotifyPassword,
-    }
-}
+//     return {
+//         name: playListName,
+//         link: link,
+//         email: spotifyEmail,
+//         password: spotifyPassword,
+//     }
+// }
 /**
  * This function takes in a URL of a YouTube playlist and will save each
  * individual song and its artist into an array.
@@ -199,7 +200,7 @@ async function makeSpotifyPlaylist(userInfo) {
 
     await page.type(
         "input.f0GjZQZc4c_bKpqdyKbq.JaGLdeBa2UaUMBT44vqI",
-        userInfo.playListName
+        userInfo.name
     )
 
     await Promise.resolve(
@@ -209,37 +210,31 @@ async function makeSpotifyPlaylist(userInfo) {
     )
 
     // This for-loop will search the song on Spotify and add it to the playlist
-    for (let index = 0; index < totalNum; index++) {
-        await page.goto(
-            `https://open.spotify.com/search/${encodeURIComponent(listSong[index] + " " + listChannel[index])}`,
-            { waitUntil: "networkidle2" }
-        )
-
+    for (let i = 0; i < totalNum; i++) {
         try {
-            const foundSong = await page.$('button[data-testid="play-button"]')
-            await foundSong.click({ button: "right" })
-
-            const buttonAdd = await page.$(
-                'button[role="menuitem"][aria-label*="Add to playlist"]'
+            await page.waitForSelector(
+                "input.encore-text.encore-text-body-small.FeWwGSRANj36qpOBoxdx"
             )
-            await buttonAdd.click()
-
-            const buttonPlaylist = await page.$(
-                `div[role="menuitem"][aria-label*="YouTube Playlist"]`
+            await page.type(
+                "input.encore-text.encore-text-body-small.FeWwGSRANj36qpOBoxdx",
+                listSong[i]
             )
-            await buttonPlaylist.click()
 
-            console.log("Added " + listSong[index] + " - " + listChannel[index])
-            numSuccess += 1
-        } catch (err) {
+            await page.waitForSelector(
+                "button.Button-sc-y0gtbx-0.fbysdG.encore-text-body-small-bold"
+            )
+            await page.click(
+                "button.Button-sc-y0gtbx-0.fbysdG.encore-text-body-small-bold"
+            )
+
+            await page.waitForSelector("button.JzyZE2R09wq7xtjECDeR")
+            await page.click("button.JzyZE2R09wq7xtjECDeR")
+                
+        } catch (error) {
+            failedTransfers.push(listSong[i] + " - " + listChannel[i])
             console.log(
-                "Failed to transfer " +
-                    listSong[index] +
-                    " - " +
-                    listChannel[index]
+                "Failed to transfer: " + listSong[i] + " - " + listChannel[i]
             )
-            failedTransfers.push(listSong[index] + " - " + listChannel[index])
-            continue
         }
     }
 
@@ -254,5 +249,11 @@ async function makeSpotifyPlaylist(userInfo) {
     return process.exit(0)
 }
 
-informationFromUser = getInformationFromUser()
-transferPlaylist(informationFromUser)
+let info = {
+    name: "Hindi Old Classics",
+    link: "https://www.youtube.com/playlist?list=PLjrle6cl2mIUilRjpb40Uvm0WulCz3obg",
+    email: process.env.EMAIL.toString(),
+    password: process.env.PASSWORD.toString(),
+}
+// var informationFromUser = getInformationFromUser()
+transferPlaylist(info)
