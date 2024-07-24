@@ -3,7 +3,7 @@
 ## Overview
 
 
-This script automates the process of creating a new playlist in Spotify from a YouTube playlist. It uses `readline-sync` for user input and `puppeteer` for web automation.
+This script automates the process of creating a new playlist in Spotify from a YouTube playlist. It uses `readline-sync` for user input and `puppeteer` for web automation and a `dot-env` package.
 
 ## Getting Started
 
@@ -18,7 +18,9 @@ This script automates the process of creating a new playlist in Spotify from a Y
    ```bash
    https://github.com/Ansh2004P/SpotyTube.git
 
-2. Run the following commands:
+2. **Add .env file same as the format of .env.sample file**
+
+3. **Run the following commands:**
    ```bash
      npm install
      npm run index.js
